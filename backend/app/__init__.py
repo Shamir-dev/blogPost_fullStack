@@ -16,8 +16,10 @@ def create_app(config_class=DevConfig):
 
     from app.routes.posts import posts_bp
     from app.routes.categories import categories_bp
+    from app.routes.auth import auth_bp
     app.register_blueprint(posts_bp, url_prefix="/api/posts")
     app.register_blueprint(categories_bp, url_prefix="/api/categories")
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
 
     @app.route("/api/health")
     def health():
