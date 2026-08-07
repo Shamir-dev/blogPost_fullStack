@@ -1,14 +1,30 @@
 # backend/app/routes/posts.py
 from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
 from app.models.post import Post
 from app.models.category import Category
+from app.models.follow import Follow
 
 posts_bp = Blueprint("posts", __name__)
 
+
+@posts_bp.route("/search", methods=["GET"])
+def search_posts():
+    q = request.args.get("q", "").strip()
+    if not q:
+        return jsonify([])
+    posts = Post.query.filter(
+        Post.status == "published",
+        Post.title.ilike(f"%{q}%")
+    ).order_by(Post.created_at.desc()).limit(20).all()
+    return jsonify([p.to_dict() for p in posts])
+
+
 @posts_bp.route("", methods=["GET"])
+@jwt_required(optional=True)
 def get_posts():
-    sort = request.args.get("sort", "recent")  # popular | recent | trending
+    sort = request.args.get("sort", "recent")
     category_slug = request.args.get("category")
 
     query = Post.query.filter_by(status="published")
@@ -16,8 +32,14 @@ def get_posts():
     if category_slug:
         query = query.join(Category).filter(Category.slug == category_slug)
 
-    if sort == "popular":
-        # naive popularity = like count; refined later with a real score
+    if sort == "following":
+        user_id = get_jwt_identity()
+        if not user_id:
+            return jsonify([])
+        followed_ids = [f.following_id for f in Follow.query.filter_by(follower_id=user_id).all()]
+        query = query.filter(Post.author_id.in_(followed_ids))
+        posts = query.order_by(Post.created_at.desc()).all()
+    elif sort == "popular":
         posts = query.all()
         posts.sort(key=lambda p: len(p.likes), reverse=True)
     elif sort == "trending":
@@ -36,7 +58,7 @@ def get_post(post_id):
     db.session.commit()
 
     data = post.to_dict()
-    data["content"] = post.content  # full body only on detail view
+    data["content"] = post.content
     return jsonify(data)
 
 
