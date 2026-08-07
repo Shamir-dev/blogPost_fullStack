@@ -7,8 +7,9 @@ load_dotenv()
 BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-me")
-    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-jwt-secret-change-me")
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-backupkey-if-1st-wont-work")
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-jwt-secret-try-your-luck")
+
     SQLALCHEMY_DATABASE_URI = os.getenv(
         "DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'devinsights.db')}"
     )
