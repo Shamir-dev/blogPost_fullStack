@@ -21,11 +21,14 @@ def search_posts():
     return jsonify([p.to_dict() for p in posts])
 
 
+# backend/app/routes/posts.py —
 @posts_bp.route("", methods=["GET"])
 @jwt_required(optional=True)
 def get_posts():
     sort = request.args.get("sort", "recent")
     category_slug = request.args.get("category")
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 6, type=int)
 
     query = Post.query.filter_by(status="published")
 
@@ -35,21 +38,29 @@ def get_posts():
     if sort == "following":
         user_id = get_jwt_identity()
         if not user_id:
-            return jsonify([])
+            return jsonify({"posts": [], "has_more": False})
         followed_ids = [f.following_id for f in Follow.query.filter_by(follower_id=user_id).all()]
         query = query.filter(Post.author_id.in_(followed_ids))
-        posts = query.order_by(Post.created_at.desc()).all()
+        all_posts = query.order_by(Post.created_at.desc()).all()
     elif sort == "popular":
-        posts = query.all()
-        posts.sort(key=lambda p: len(p.likes), reverse=True)
+        all_posts = query.all()
+        all_posts.sort(key=lambda p: len(p.likes), reverse=True)
     elif sort == "trending":
-        posts = query.all()
-        posts.sort(key=lambda p: (len(p.likes) + len(p.comments)), reverse=True)
-    else:  # recent
-        posts = query.order_by(Post.created_at.desc()).all()
+        all_posts = query.all()
+        all_posts.sort(key=lambda p: (len(p.likes) + len(p.comments)), reverse=True)
+    else:
+        all_posts = query.order_by(Post.created_at.desc()).all()
 
-    return jsonify([p.to_dict() for p in posts])
+    start = (page - 1) * per_page
+    end = start + per_page
+    page_posts = all_posts[start:end]
+    has_more = end < len(all_posts)
 
+    return jsonify({
+        "posts": [p.to_dict() for p in page_posts],
+        "has_more": has_more,
+        "total": len(all_posts),
+    })
 
 @posts_bp.route("/<int:post_id>", methods=["GET"])
 def get_post(post_id):

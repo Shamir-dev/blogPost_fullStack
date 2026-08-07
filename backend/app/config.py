@@ -1,3 +1,4 @@
+# backend/app/config.py
 import os
 from dotenv import load_dotenv
 
@@ -12,6 +13,7 @@ class Config:
         "DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'devinsights.db')}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 
 class DevConfig(Config):
     DEBUG = True
