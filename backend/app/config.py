@@ -27,25 +27,32 @@
 # class ProdConfig(Config):
 #     DEBUG = False
 
+
+# backend/app/config.py
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-
-# 1. Fetch environment variable WITH local SQLite fallback
-db_url = os.getenv(
-    "DATABASE_URL", 
-    f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'devinsights.db')}"
-)
-
-# 2. Fix Render's legacy prefix safely
-if db_url.startswith("postgres://"):
+# Normalize DATABASE_URL if needed
+db_url = os.getenv("DATABASE_URL")
+if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 
+BASE_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-backupkey")
-    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-jwt-secret")
-    SQLALCHEMY_DATABASE_URI = db_url
+    SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-backupkey-if-1st-wont-work")
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-jwt-secret-try-your-luck")
+
+    # Use normalized db_url if present, otherwise fallback to SQLite
+    SQLALCHEMY_DATABASE_URI = db_url or f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'devinsights.db')}"
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+
+class DevConfig(Config):
+    DEBUG = True
+
+class ProdConfig(Config):
+    DEBUG = False
