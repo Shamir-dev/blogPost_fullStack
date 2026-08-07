@@ -10,8 +10,20 @@ def create_app(config_class=DevConfig):
     db.init_app(app)
     migrate.init_app(app, db)
     # backend/app/__init__.py
-    cors.init_app(app, resources={r"/api/*": {"origins": ["https://blogpostsamir.netlify.app/", "http://localhost:5173"]}})
-    jwt.init_app(app)
+    # cors.init_app(app, resources={r"/api/*": {"origins": ["https://blogpostsamir.netlify.app/", "http://localhost:5173"]}})
+    # jwt.init_app(app)
+    cors.init_app(
+    app, 
+    resources={
+        r"/api/*": {
+            "origins": [
+                "https://blogpostsamir.netlify.app", # Removed the trailing slash
+                "http://localhost:5173"
+            ]
+        }
+    },
+    supports_credentials=True # Required if Axios sends auth headers/cookies
+    )
 
     # backend/app/__init__.py — update the models import line only
     from app.models import user, category, post, comment, like, bookmark, follow, collection, collection_post, password_reset
