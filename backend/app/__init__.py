@@ -9,7 +9,8 @@ def create_app(config_class=DevConfig):
 
     db.init_app(app)
     migrate.init_app(app, db)
-    cors.init_app(app, resources={r"/api/*": {"origins": "http://localhost:5173"}})
+    # backend/app/__init__.py
+    cors.init_app(app, resources={r"/api/*": {"origins": ["https://blogpostsamir.netlify.app/", "http://localhost:5173"]}})
     jwt.init_app(app)
 
     # backend/app/__init__.py — update the models import line only
