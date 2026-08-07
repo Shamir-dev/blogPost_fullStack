@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from app.extensions import db
 from app.models.user import User
+from app.models.password_reset import PasswordResetRequest
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -30,7 +31,7 @@ def register():
         username=data["username"],
         email=data["email"],
         password_hash=generate_password_hash(data["password"]),
-        avatar_url=data.get("avatar_url", f"https://i.pravatar.cc/150?u={data['email']}"),
+         avatar_url=data.get("avatar_url", f"https://api.dicebear.com/7.x/avataaars/svg?seed={data['username']}"),
     )
     db.session.add(user)
     db.session.commit()
@@ -62,3 +63,23 @@ def get_current_user():
     if not user:
         return jsonify({"error": "User not found"}), 404
     return jsonify(user.to_dict())
+
+
+@auth_bp.route("/request-reset", methods=["POST"])
+def request_password_reset():
+    data = request.get_json()
+    email = data.get("email", "").strip()
+    if not email:
+        return jsonify({"error": "Email is required"}), 400
+
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        # Don't reveal whether the email exists
+        return jsonify({"message": "If that email exists, a request has been sent to the admin."}), 200
+
+    existing = PasswordResetRequest.query.filter_by(user_id=user.id, status="pending").first()
+    if not existing:
+        db.session.add(PasswordResetRequest(user_id=user.id))
+        db.session.commit()
+
+    return jsonify({"message": "If that email exists, a request has been sent to the admin."}), 200

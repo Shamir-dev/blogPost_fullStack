@@ -1,4 +1,4 @@
-# backend/app/models/user.py
+# backend/app/models/user.py — full file
 from datetime import datetime
 from app.extensions import db
 
@@ -12,9 +12,9 @@ class User(db.Model):
     avatar_url = db.Column(db.String(255), default="")
     bio = db.Column(db.String(300), default="")
     is_verified = db.Column(db.Boolean, default=False)
+    is_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationships
     posts = db.relationship("Post", back_populates="author", cascade="all, delete-orphan")
     comments = db.relationship("Comment", back_populates="user", cascade="all, delete-orphan")
 
@@ -26,4 +26,5 @@ class User(db.Model):
             "avatar_url": self.avatar_url,
             "bio": self.bio,
             "is_verified": self.is_verified,
+            "is_admin": self.is_admin,
         }

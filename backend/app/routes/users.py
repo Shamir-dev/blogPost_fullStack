@@ -1,5 +1,5 @@
 # backend/app/routes/users.py
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
 from app.models.user import User
@@ -51,6 +51,22 @@ def get_my_bookmarks():
     return jsonify(posts)
 
 
+@users_bp.route("/me", methods=["PATCH"])
+@jwt_required()
+def update_my_profile():
+    user_id = get_jwt_identity()
+    user = User.query.get_or_404(user_id)
+    data = request.get_json()
+
+    if "avatar_url" in data:
+        user.avatar_url = data["avatar_url"]
+    if "bio" in data:
+        user.bio = data["bio"]
+
+    db.session.commit()
+    return jsonify(user.to_dict())
+
+
 @users_bp.route("/<int:user_id>/follow", methods=["POST"])
 @jwt_required()
 def toggle_follow(user_id):
@@ -85,3 +101,24 @@ def get_following(user_id):
     User.query.get_or_404(user_id)
     following = db.session.query(User).join(Follow, Follow.following_id == User.id).filter(Follow.follower_id == user_id).all()
     return jsonify([u.to_dict() for u in following])
+
+
+# backend/app/routes/users.py — Added this route (to let user reset password)# self service in setting
+@users_bp.route("/me/password", methods=["PATCH"])
+@jwt_required()
+def change_my_password():
+    from werkzeug.security import generate_password_hash, check_password_hash
+    user_id = get_jwt_identity()
+    user = User.query.get_or_404(user_id)
+    data = request.get_json()
+
+    if not check_password_hash(user.password_hash, data.get("current_password", "")):
+        return jsonify({"error": "Current password is incorrect"}), 401
+
+    new_password = data.get("new_password", "")
+    if len(new_password) < 6:
+        return jsonify({"error": "New password must be at least 6 characters"}), 400
+
+    user.password_hash = generate_password_hash(new_password)
+    db.session.commit()
+    return jsonify({"message": "Password updated"})
