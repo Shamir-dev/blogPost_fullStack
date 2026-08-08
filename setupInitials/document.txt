@@ -1,5 +1,9 @@
 here i am keeping the documentation about my blogpost Application.
 as daily.
+After lots of configuration finally deployed and worked, solution is quite simple and easy
+but finding the root cause was extremely hard especially if you had not face such issue before and
+very tough to navigate 100's of error to find specific cause of error as it listed clearly there but able to figure out where it's mention need
+practice and prior experience
 
 
 Service ID:
