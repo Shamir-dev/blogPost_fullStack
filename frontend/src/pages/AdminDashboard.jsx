@@ -1,10 +1,11 @@
 // src/pages/AdminDashboard.jsx
 import { useState, useEffect } from 'react'
-import { Trash2, Check, Clock } from 'lucide-react'
+import { Trash2, Check, Clock, Plus } from 'lucide-react'
 import {
   fetchStats, fetchAllUsers, deleteUserAdmin, fetchAllPosts, deletePostAdmin,
   fetchPasswordResets, fetchPasswordResetHistory, resolvePasswordReset,
 } from '../api/admin.js'
+import { fetchCategories, createCategory, deleteCategory } from '../api/categories.js'
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('resets')
@@ -15,10 +16,16 @@ export default function AdminDashboard() {
   const [history, setHistory] = useState([])
   const [resolvedInfo, setResolvedInfo] = useState(null)
 
+  const [categories, setCategories] = useState([])
+  const [newCatName, setNewCatName] = useState('')
+  const [catError, setCatError] = useState('')
+  const [catSaving, setCatSaving] = useState(false)
+
   const loadUsers = () => fetchAllUsers().then(setUsers)
   const loadPosts = () => fetchAllPosts().then(setPosts)
   const loadResets = () => fetchPasswordResets().then(setResets)
   const loadHistory = () => fetchPasswordResetHistory().then(setHistory)
+  const loadCategories = () => fetchCategories().then(setCategories)
 
   useEffect(() => {
     fetchStats().then(setStats)
@@ -26,6 +33,7 @@ export default function AdminDashboard() {
     loadPosts()
     loadResets()
     loadHistory()
+    loadCategories()
   }, [])
 
   const handleDeleteUser = async (id) => {
@@ -45,6 +53,32 @@ export default function AdminDashboard() {
     setResolvedInfo(data)
     loadResets()
     loadHistory()
+  }
+
+  const handleCreateCategory = async (e) => {
+    e.preventDefault()
+    setCatError('')
+    if (!newCatName.trim()) return
+    setCatSaving(true)
+    try {
+      await createCategory(newCatName)
+      setNewCatName('')
+      loadCategories()
+    } catch (err) {
+      setCatError(err.response?.data?.error || 'Failed to create category')
+    } finally {
+      setCatSaving(false)
+    }
+  }
+
+  const handleDeleteCategory = async (id) => {
+    if (!confirm('Delete this category?')) return
+    try {
+      await deleteCategory(id)
+      loadCategories()
+    } catch (err) {
+      alert(err.response?.data?.error || 'Failed to delete category')
+    }
   }
 
   return (
@@ -85,6 +119,7 @@ export default function AdminDashboard() {
         <button onClick={() => setTab('history')} className={`px-4 py-2 rounded-lg text-sm font-medium ${tab === 'history' ? 'bg-indigo-600 text-white' : 'border border-gray-200 dark:border-gray-800'}`}>Reset History</button>
         <button onClick={() => setTab('users')} className={`px-4 py-2 rounded-lg text-sm font-medium ${tab === 'users' ? 'bg-indigo-600 text-white' : 'border border-gray-200 dark:border-gray-800'}`}>Users</button>
         <button onClick={() => setTab('posts')} className={`px-4 py-2 rounded-lg text-sm font-medium ${tab === 'posts' ? 'bg-indigo-600 text-white' : 'border border-gray-200 dark:border-gray-800'}`}>Posts</button>
+        <button onClick={() => setTab('categories')} className={`px-4 py-2 rounded-lg text-sm font-medium ${tab === 'categories' ? 'bg-indigo-600 text-white' : 'border border-gray-200 dark:border-gray-800'}`}>Categories</button>
       </div>
 
       {tab === 'resets' && (
@@ -157,6 +192,36 @@ export default function AdminDashboard() {
               <button onClick={() => handleDeletePost(p.id)} className="p-1.5 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
             </div>
           ))}
+        </div>
+      )}
+
+      {tab === 'categories' && (
+        <div>
+          <form onSubmit={handleCreateCategory} className="flex gap-3 mb-4">
+            <input
+              value={newCatName}
+              onChange={(e) => setNewCatName(e.target.value)}
+              placeholder="New category name..."
+              className="flex-1 px-3 py-2 rounded-lg text-sm bg-gray-100 dark:bg-gray-900 border border-transparent focus:border-indigo-400 focus:outline-none"
+            />
+            <button type="submit" disabled={catSaving}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg disabled:opacity-50">
+              <Plus size={16} /> Add
+            </button>
+          </form>
+          {catError && <p className="text-red-500 text-sm mb-4">{catError}</p>}
+
+          <div className="space-y-2">
+            {categories.map((c) => (
+              <div key={c.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-800">
+                <div>
+                  <p className="text-sm font-medium">{c.name}</p>
+                  <p className="text-xs text-gray-400">{c.post_count} posts</p>
+                </div>
+                <button onClick={() => handleDeleteCategory(c.id)} className="p-1.5 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

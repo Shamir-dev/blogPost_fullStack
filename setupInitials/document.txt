@@ -1,2 +1,9 @@
 here i am keeping the documentation about my blogpost Application.
 as daily.
+
+
+Service ID:
+dpg-d9qtl45bedkc73fo5fkg-a
+
+ SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-backupkey-if-1st-wont-work")
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-jwt-secret-try-your-luck")
