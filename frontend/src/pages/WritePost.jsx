@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import { useCategories } from '../hooks/useCategories.js'
 import { createPost, updatePost, fetchPostById } from '../api/posts.js'
 import { uploadImage } from '../api/uploads.js'
+import { API_BASE_URL } from '../api/axios.js'
 
 export default function WritePost() {
   const { user } = useAuth()
@@ -48,7 +49,7 @@ export default function WritePost() {
     setUploading(true)
     try {
       const url = await uploadImage(file)
-      setCoverImage(`http://localhost:5000${url}`)
+     setCoverImage(`${API_BASE_URL.replace('/api', '')}${url}`)
     } catch (err) {
       setError(err.response?.data?.error || 'Image upload failed')
     } finally {
