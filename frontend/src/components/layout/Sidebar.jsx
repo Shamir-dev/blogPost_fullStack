@@ -1,9 +1,10 @@
 // src/components/layout/Sidebar.jsx
 import { NavLink } from 'react-router-dom'
+import * as Icons from 'lucide-react'
 import {
   Home, Compass, Bookmark, FileText, PenSquare,
   Users, FolderOpen, Code2, Cpu, Lightbulb,
-  FlaskConical, Sigma, TrendingUp
+  FlaskConical, Sigma, TrendingUp,
 } from 'lucide-react'
 import { useCategories } from '../../hooks/useCategories.js'
 
@@ -17,13 +18,20 @@ const navItems = [
   { to: '/collections', label: 'Collections', icon: FolderOpen },
 ]
 
-const categoryIcons = {
+// Fallback for the original categories, which were created before the icon field existed
+const legacySlugIcons = {
   'science-tech': Code2,
   'ai-innovation': Cpu,
   'philosophy': Lightbulb,
   'biology-medicine': FlaskConical,
   'physics-maths': Sigma,
   'career-growth': TrendingUp,
+}
+
+function getCategoryIcon(category) {
+  if (category.icon && Icons[category.icon]) return Icons[category.icon]
+  if (legacySlugIcons[category.slug]) return legacySlugIcons[category.slug]
+  return Code2
 }
 
 function linkClasses({ isActive }) {
@@ -39,12 +47,8 @@ export default function Sidebar({ isOpen, onClose }) {
 
   return (
     <>
-      {/* Backdrop — only visible/clickable on small screens when sidebar is open */}
       {isOpen && (
-        <div
-          onClick={onClose}
-          className="fixed inset-0 bg-black/40 z-20 lg:hidden"
-        />
+        <div onClick={onClose} className="fixed inset-0 bg-black/40 z-20 lg:hidden" />
       )}
 
       <aside
@@ -82,7 +86,7 @@ export default function Sidebar({ isOpen, onClose }) {
           ) : (
             <nav className="space-y-1">
               {categories.map((cat) => {
-                const Icon = categoryIcons[cat.slug] || Code2
+                const Icon = getCategoryIcon(cat)
                 return (
                   <NavLink key={cat.id} to={`/category/${cat.slug}`} className={linkClasses}>
                     <Icon size={18} />

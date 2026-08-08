@@ -1,6 +1,7 @@
 // src/pages/AdminDashboard.jsx
 import { useState, useEffect } from 'react'
-import { Trash2, Check, Clock, Plus } from 'lucide-react'
+import { Trash2, Check, Clock, Plus, ExternalLink } from 'lucide-react'
+import * as Icons from 'lucide-react'
 import {
   fetchStats, fetchAllUsers, deleteUserAdmin, fetchAllPosts, deletePostAdmin,
   fetchPasswordResets, fetchPasswordResetHistory, resolvePasswordReset,
@@ -18,6 +19,7 @@ export default function AdminDashboard() {
 
   const [categories, setCategories] = useState([])
   const [newCatName, setNewCatName] = useState('')
+  const [newCatIcon, setNewCatIcon] = useState('')
   const [catError, setCatError] = useState('')
   const [catSaving, setCatSaving] = useState(false)
 
@@ -59,10 +61,15 @@ export default function AdminDashboard() {
     e.preventDefault()
     setCatError('')
     if (!newCatName.trim()) return
+    if (newCatIcon.trim() && !Icons[newCatIcon.trim()]) {
+      setCatError(`"${newCatIcon.trim()}" isn't a valid icon name — check the exact spelling on the Lucide site.`)
+      return
+    }
     setCatSaving(true)
     try {
-      await createCategory(newCatName)
+      await createCategory(newCatName, newCatIcon.trim())
       setNewCatName('')
+      setNewCatIcon('')
       loadCategories()
     } catch (err) {
       setCatError(err.response?.data?.error || 'Failed to create category')
@@ -197,30 +204,51 @@ export default function AdminDashboard() {
 
       {tab === 'categories' && (
         <div>
-          <form onSubmit={handleCreateCategory} className="flex gap-3 mb-4">
-            <input
-              value={newCatName}
-              onChange={(e) => setNewCatName(e.target.value)}
-              placeholder="New category name..."
-              className="flex-1 px-3 py-2 rounded-lg text-sm bg-gray-100 dark:bg-gray-900 border border-transparent focus:border-indigo-400 focus:outline-none"
-            />
-            <button type="submit" disabled={catSaving}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg disabled:opacity-50">
-              <Plus size={16} /> Add
-            </button>
+          <form onSubmit={handleCreateCategory} className="space-y-3 mb-4">
+            <div className="flex gap-3">
+              <input
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                placeholder="Category name..."
+                className="flex-1 px-3 py-2 rounded-lg text-sm bg-gray-100 dark:bg-gray-900 border border-transparent focus:border-indigo-400 focus:outline-none"
+              />
+              <input
+                value={newCatIcon}
+                onChange={(e) => setNewCatIcon(e.target.value)}
+                placeholder="Icon name (optional) — e.g. Film"
+                className="flex-1 px-3 py-2 rounded-lg text-sm bg-gray-100 dark:bg-gray-900 border border-transparent focus:border-indigo-400 focus:outline-none"
+              />
+              <button type="submit" disabled={catSaving}
+                className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg disabled:opacity-50 whitespace-nowrap">
+                <Plus size={16} /> Add
+              </button>
+            </div>
+            <a href="https://lucide.dev/icons" target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-1 text-xs text-indigo-500 hover:underline w-fit">
+              Browse icons on lucide.dev <ExternalLink size={12} />
+            </a>
+            <p className="text-xs text-gray-400">
+              Click any icon there, copy its exact name (e.g. "Film", "Gamepad2"), and paste it above. Leave blank for a default icon.
+            </p>
           </form>
           {catError && <p className="text-red-500 text-sm mb-4">{catError}</p>}
 
           <div className="space-y-2">
-            {categories.map((c) => (
-              <div key={c.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-800">
-                <div>
-                  <p className="text-sm font-medium">{c.name}</p>
-                  <p className="text-xs text-gray-400">{c.post_count} posts</p>
+            {categories.map((c) => {
+              const CatIcon = (c.icon && Icons[c.icon]) || Icons.Code2
+              return (
+                <div key={c.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-800">
+                  <div className="flex items-center gap-3">
+                    <CatIcon size={18} className="text-gray-400" />
+                    <div>
+                      <p className="text-sm font-medium">{c.name}</p>
+                      <p className="text-xs text-gray-400">{c.post_count} posts</p>
+                    </div>
+                  </div>
+                  <button onClick={() => handleDeleteCategory(c.id)} className="p-1.5 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
                 </div>
-                <button onClick={() => handleDeleteCategory(c.id)} className="p-1.5 text-gray-400 hover:text-red-500"><Trash2 size={16} /></button>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}

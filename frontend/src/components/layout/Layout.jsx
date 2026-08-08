@@ -5,7 +5,10 @@ import Sidebar from './Sidebar.jsx'
 import Navbar from './Navbar.jsx'
 
 export default function Layout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return window.innerWidth >= 1024 // Tailwind's `lg` breakpoint
+  })
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">

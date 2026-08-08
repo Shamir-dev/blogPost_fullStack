@@ -49,7 +49,7 @@ export default function WritePost() {
     setUploading(true)
     try {
       const url = await uploadImage(file)
-     setCoverImage(`${API_BASE_URL.replace('/api', '')}${url}`)
+      setCoverImage(`${API_BASE_URL.replace('/api', '')}${url}`)
     } catch (err) {
       setError(err.response?.data?.error || 'Image upload failed')
     } finally {
@@ -98,12 +98,30 @@ export default function WritePost() {
         </div>
 
         <div>
-          <label className="text-sm font-medium">Cover image</label>
+          <div className="flex items-center justify-between mb-1">
+            <label className="text-sm font-medium">Cover image URL</label>
+            <span className="text-xs text-indigo-500">Recommended — faster</span>
+          </div>
+          <input
+            type="text"
+            value={coverImage}
+            onChange={(e) => setCoverImage(e.target.value)}
+            placeholder="https://images.unsplash.com/..."
+            className="w-full px-3 py-2 rounded-lg text-sm bg-gray-100 dark:bg-gray-900 border border-transparent focus:border-indigo-400 focus:outline-none"
+          />
+
+          <div className="flex items-center gap-3 my-3">
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+            <span className="text-xs text-gray-400">or</span>
+            <div className="flex-1 h-px bg-gray-200 dark:bg-gray-800" />
+          </div>
+
           <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" onChange={handleFileChange}
-            className="w-full mt-1 text-sm text-gray-600 dark:text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-indigo-600 file:text-white file:text-sm file:font-medium hover:file:bg-indigo-700 file:cursor-pointer" />
+            className="text-sm text-gray-600 dark:text-gray-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-gray-200 dark:file:bg-gray-800 file:text-gray-700 dark:file:text-gray-300 file:text-sm file:font-medium hover:file:bg-gray-300 dark:hover:file:bg-gray-700 file:cursor-pointer" />
           {uploading && <p className="text-xs text-gray-400 mt-1">Uploading...</p>}
+
           {coverImage && !uploading && (
-            <img src={coverImage} alt="Cover preview" className="mt-3 w-full h-48 object-cover rounded-lg" />
+            <img src={coverImage} alt="Cover preview" className="mt-3 w-full h-48 object-cover rounded-lg" onError={(e) => e.target.style.display = 'none'} />
           )}
         </div>
 
